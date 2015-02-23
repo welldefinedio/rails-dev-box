@@ -1,0 +1,22 @@
+#!/bin/bash
+# Usage: script/bootstrap
+set -e
+
+function check_dependency() {
+  command -v $1 >/dev/null 2>&1 || {
+    echo >&2 "${1} is required."
+    exit 1
+  }
+}
+
+check_dependency bundle
+
+if [ "$(uname)" == "Darwin" ]; then
+  check_dependency vagrant
+  echo "You’re on a Mac, so we need to bootstrap within vagrant"
+  vagrant status | grep "running" >/dev/null 2>&1 || vagrant up
+  vagrant ssh -c "cd /app; script/bootstrap"
+else
+  echo "===> Bundling"
+  bundle install --path vendor/bundle
+fi

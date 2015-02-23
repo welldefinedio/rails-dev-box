@@ -1,0 +1,24 @@
+#!/bin/bash
+# Usage: script/server
+
+set -e
+
+function check_dependency() {
+  command -v $1 >/dev/null 2>&1 || {
+    echo >&2 "${1} is required."
+    exit 1
+  }
+}
+
+check_dependency bundle
+
+if [ "$(uname)" == "Darwin" ]; then
+  check_dependency vagrant
+  echo "You’re on a Mac, so we need to run the server in vagrant"
+  vagrant status | grep "running" >/dev/null 2>&1 || vagrant up
+  vagrant ssh -c "cd /app; script/server"
+else
+  # changes to Rack mean that within Vagrant, we need to bind to port 0.0.0.0
+  bundle exec rails server -b 0.0.0.0
+fi
+
